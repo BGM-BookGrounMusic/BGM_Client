@@ -1,15 +1,23 @@
 package com.example.bookgroundmusic
 
+import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // 사용 설명서 화면으로 이동
+        button_guide.setOnClickListener {
+            val intent = Intent(this, GuideActivity::class.java)
+            startActivity(intent)
+        }
 
         // 아래 코드처럼 모드나 음악 설정 시 Textview 클릭 시 글자색 바뀌는 걸로 하고, 실질적으로 서버에는 boolean 값 넘겨주면 될 것 같음
 
@@ -24,5 +32,7 @@ class MainActivity : AppCompatActivity() {
 //                only_bgm = false
 //            }
 //        })
+
+
     }
 }
