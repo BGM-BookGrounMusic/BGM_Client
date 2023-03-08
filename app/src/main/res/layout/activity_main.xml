@@ -41,6 +41,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="37dp"
+        android:paddingBottom="10dp"
         android:text="ON버튼을 누르고 책을 읽어 보자!"
         android:textColor="@color/black"
         android:textSize="18dp"
@@ -221,6 +222,39 @@
                     android:layout_marginRight="70sp"
                     android:layout_alignParentRight="true"
                     android:layout_below="@id/genre_1" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="15dp"
+                android:background="@drawable/btn_radius_design"
+                android:backgroundTint="#F2EFEB">
+
+                <TextView
+                    android:id="@+id/statusbar_setting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="35sp"
+                    android:layout_marginTop="20sp"
+                    android:layout_marginBottom="5sp"
+                    android:text="상단바 알림 표시 설정"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="해당 설정 사용 여부"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="10sp"
+                    android:layout_marginBottom="7sp"
+                    android:layout_marginLeft="50sp"
+                    android:layout_below="@id/statusbar_setting"
+                    />
 
             </RelativeLayout>
         </LinearLayout>

@@ -110,9 +110,8 @@ class MainActivity : AppCompatActivity() {
             MediaProjectionController.screenCapture(this) { bitmap ->
                 // TODO : You can use the captured image (bitmap)
 
-                //binding.imgView.setImageBitmap(bitmap) // Example to show the result
                 var res = bitmaptoText(bitmap)
-                //binding.textView.text = res
+                // txtview_fortest.text = res (작동 테스트 완료)
 
 //                // string to txt file
 //                val fileName = "text.txt"
