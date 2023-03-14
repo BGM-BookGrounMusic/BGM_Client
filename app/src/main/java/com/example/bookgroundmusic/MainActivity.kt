@@ -1,20 +1,24 @@
 package com.example.bookgroundmusic
 
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.googlecode.tesseract.android.TessBaseAPI
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -24,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //permissionCheck()
+        permissionCheck()
         startMainService()
         //initializeView()
         setListener()
@@ -85,18 +89,6 @@ class MainActivity : AppCompatActivity() {
         stopService(serviceIntent)
     }
 
-//    private fun initializeView() {
-//
-//        MediaProjectionController.isRecording.observe(this) { isRecording ->
-//            if (isRecording) {
-//                binding.btnRecordStart.isEnabled = false
-//                binding.btnRecordStop.isEnabled = true
-//            } else {
-//                binding.btnRecordStart.isEnabled = true
-//                binding.btnRecordStop.isEnabled = false
-//            }
-//        }
-//    }
 
     private fun setListener() {
         // 1. on 버튼 클릭시
@@ -113,9 +105,26 @@ class MainActivity : AppCompatActivity() {
                 var res = bitmaptoText(bitmap)
                 // txtview_fortest.text = res (작동 테스트 완료)
 
-//                // string to txt file
-//                val fileName = "text.txt"
-//                var file = File(fileName)
+                // string to txt file
+                val fileName = "text.txt"
+//                val fileDir = applicationContext.getExternalFilesDir(null)
+//                var file = File(fileDir, fileName)
+//
+//
+//                val fileWriter = FileWriter(file)
+//                fileWriter.write(res)
+//                fileWriter.close()
+
+                var outputFile : FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
+                outputFile.write(res.toByteArray())
+                outputFile.close()
+//
+//                val os = openFileOutput(fileName, MODE_PRIVATE)
+//                os.write(res.toString().toByteArray())
+//                os.close()
+//                Toast.makeText(this, "텍스트 파일로 저장", Toast.LENGTH_SHORT).show()
+
+//                saveToExternalStorage(res,fileName)
 
                 MainApplication.updateNotification(this, "스크린샷")
                 Toast.makeText(this, "스크린캡처 테스트", Toast.LENGTH_SHORT).show()
@@ -129,7 +138,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //외부저장장치에서 앱 전용데이터로 사용할 파일 객체를 반환
+    fun getAppDataFileFromExternalStorage(filename: String) : File{
+        //kitkat버전부터는
+        val dir = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS)
+            //하위버전에서는 디렉토리 직접 입력
+        }else{
+            File(Environment.getExternalStorageDirectory().absolutePath+"/Documents")
+        }
 
+        // 디렉토리없으면 만듦
+        dir?.mkdirs()
+        return File("${dir!!.absolutePath}${File.separator}${filename}")
+    }
+
+    //외부 저장소에 데이터 저장
+    fun saveToExternalStorage(text: String, filename: String){
+        val fileOutputStream = FileOutputStream(getAppDataFileFromExternalStorage(filename))
+        fileOutputStream.write(text.toByteArray())
+        fileOutputStream.close()
+    }
+
+
+    private fun permissionCheck(): Boolean {
+        try {
+            if (ActivityCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this, arrayOf(
+                        READ_EXTERNAL_STORAGE,
+                        WRITE_EXTERNAL_STORAGE
+                    ), 300
+                )
+                return false
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+
+        return true
+    }
 
     // Tesseract
 
