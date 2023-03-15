@@ -16,7 +16,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.googlecode.tesseract.android.TessBaseAPI
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
 import java.util.concurrent.TimeUnit
@@ -102,18 +104,25 @@ class MainActivity : AppCompatActivity() {
             MediaProjectionController.screenCapture(this) { bitmap ->
                 // TODO : You can use the captured image (bitmap)
 
-                var res = bitmaptoText(bitmap)
-                // txtview_fortest.text = res (작동 테스트 완료)
+                // OCR (ML Kit)
+                val options = KoreanTextRecognizerOptions.Builder().build()
+                val recognizer = TextRecognition.getClient(options)
+                val image = InputImage.fromBitmap(bitmap, 0)
 
-                // string to txt file
-                val fileName = "text.txt"
+                val result = recognizer.process(image)
+                    .addOnSuccessListener { visionText ->
+                        // string to txt file
+                        val fileName = "text.txt"
 
-                var outputFile : FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-                outputFile.write(res.toByteArray())
-                outputFile.close()
+                        var outputFile : FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
+                        outputFile.write(visionText.text.toByteArray())
+                        outputFile.close()
+                    }
+                    .addOnFailureListener { e -> }
 
-                MainApplication.updateNotification(this, "스크린샷")
-                Toast.makeText(this, "스크린캡처 테스트", Toast.LENGTH_SHORT).show()
+
+//                MainApplication.updateNotification(this, "스크린샷")
+//                Toast.makeText(this, "스크린캡처 테스트", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -124,64 +133,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Tesseract
-
-    // OCR 인식 위한 파일 존재 확인 메소드
-    fun checkFile(dir: File, lang: String) {
-        try {
-            if (!dir.exists() && dir.mkdirs()) {
-                copyFiles(lang)
-            }
-            if (dir.exists()) {
-                val dataFilePath: String = dir.toString() + "/tessdata/" + lang + ".traineddata"
-                val dataFile = File(dataFilePath)
-                if (!dataFile.exists()) {
-                    copyFiles(lang)
-                }
-            }
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    // OCR 인식 위한 언어 파일 복사 메소드
-    fun copyFiles(lang: String) {
-        try {
-            val filePath: String = dir + "/tessdata/" + lang + ".traineddata"
-            val assetManager = assets
-            val inputStream: InputStream = assetManager.open("tessdata/$lang.traineddata")
-            val outputStream: OutputStream = FileOutputStream(filePath)
-            val buffer = ByteArray(1024)
-            var read: Int
-            while (inputStream.read(buffer).also { read = it } != -1) {
-                outputStream.write(buffer, 0, read)
-            }
-            outputStream.flush()
-            outputStream.close()
-            inputStream.close()
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    // 비트맵에서 텍스트 추출
-    fun bitmaptoText(bitmap: Bitmap) : String {
-        var text = ""
-        // 테서랙트
-        try {
-            dir = "$filesDir/tesseract/"
-            checkFile(File(dir + "tessdata/"), "kor")
-            checkFile(File(dir + "tessdata/"), "eng")
-            var tessBaseAPI = TessBaseAPI()
-            tessBaseAPI.init(dir, "kor")
-            tessBaseAPI.setImage(bitmap)
-
-            text = tessBaseAPI.utF8Text
-            tessBaseAPI.end()
-        } catch (e: java.lang.Exception) {
-            e.printStackTrace()
-        }
-
-        return text
-    }
 }
