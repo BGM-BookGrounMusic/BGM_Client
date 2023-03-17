@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "231027524973",
+    "project_id": "backgroundmusic-949f0",
+    "storage_bucket": "backgroundmusic-949f0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:231027524973:android:ade04680cec066a890c664",
+        "android_client_info": {
+          "package_name": "com.example.bookgroundmusic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "231027524973-1769bjl00mgnsuboe21cf9e4eu3q1oqb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPZebj7M0Xh8hZKV5hAgjxg3qv9SaIGHM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "231027524973-1769bjl00mgnsuboe21cf9e4eu3q1oqb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
