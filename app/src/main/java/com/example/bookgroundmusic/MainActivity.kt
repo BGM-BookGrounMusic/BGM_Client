@@ -1,21 +1,12 @@
 package com.example.bookgroundmusic
 
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Color
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
-import android.view.View
-import android.widget.TextView
-import android.widget.Toast
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
+import com.google.auth.oauth2.GoogleCredentials
+import com.google.firebase.FirebaseApp
+import com.google.firebase.FirebaseOptions
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
@@ -23,12 +14,23 @@ import kotlinx.android.synthetic.main.activity_main.*
 import java.io.*
 import java.util.concurrent.TimeUnit
 
+
 class MainActivity : AppCompatActivity() {
     var dir: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val serviceAccount = FileInputStream("app/src/main/assets/backgroundmusic-949f0-firebase-adminsdk-1xdu2-d57d4620e7.json")
+
+        val options: FirebaseOptions = FirebaseOptions.Builder()
+            .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+            .setDatabaseUrl("https://backgroundmusic-949f0-default-rtdb.firebaseio.com")
+            .build()
+
+        FirebaseApp.initializeApp(options)
+
 
         //permissionCheck()
         startMainService()
