@@ -126,130 +126,131 @@ object MediaProjectionController {
         }
     }
 
-    /***************************************************************************************
-     * MediaProjection Screen Recording
-     ***************************************************************************************/
+//    /***************************************************************************************
+//     * MediaProjection Screen Recording
+//     ***************************************************************************************/
+//
+//    fun screenRecording(activity: Activity, action: Action?) {
+//        startRecordCompletedAction = action
+//
+//        if (prevIntentData != null) {
+//            // If you have received permission even once, proceed without requesting permission
+//            getMediaProjectionRecord(activity, prevResultCode, prevIntentData)
+//        } else {
+//            // permission request
+//            projectionManager = activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+//            activity.startActivityForResult(projectionManager?.createScreenCaptureIntent(), mediaScreenRecord)
+//        }
+//    }
+//
+//    fun getMediaProjectionRecord(activity: Activity, resultCode: Int, intentData: Intent?) {
+//        projectionRecord = projectionManager?.getMediaProjection(resultCode, intentData!!)
+//
+//        if (projectionRecord != null) {
+//            prevIntentData = intentData
+//            prevResultCode = resultCode
+//
+//            // Create virtualDisplay
+//            createVirtualDisplayRecord(activity)
+//
+//            // MediaRecorder Start
+//            if (virtualDisplayRecord != null) {
+//                startRecording(activity)
+//            }
+//        }
+//    }
+//
+//    private fun createVirtualDisplayRecord(activity: Activity) {
+//        val metrics = activity.resources?.displayMetrics!!
+//        val density = metrics.densityDpi
+//        val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR
+//
+//        width = metrics.widthPixels
+//        height = metrics.heightPixels
+//
+//        // MediaRecorder Prepare
+//        mediaRecorder = MediaRecorder()
+//        prepareRecording(activity)
+//
+//        // MediaRecorder Surface rendering
+//        virtualDisplayRecord = projectionRecord?.createVirtualDisplay(
+//            "screenRecord", width, height, density, flags,
+//            mediaRecorder?.surface, null, null
+//        )
+//    }
+//
+//    fun createFile(activity: Activity): ParcelFileDescriptor? {
+//
+//        val contentValues = ContentValues()
+//        val currentTime = Date(System.currentTimeMillis())
+//        val currentTimeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA).format(currentTime)
+//
+//        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "MediaProjectionEx$currentTimeStamp.mp4")
+//        contentValues.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+//        contentValues.put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis());
+//
+//        val contentResolver = activity.contentResolver
+//        val collectionUri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
+//
+//        return contentResolver.openFileDescriptor(collectionUri!!, "w")
+//    }
+//
+//    private fun prepareRecording(activity: Activity) {
+//
+//        fileDescriptor = createFile(activity) // Create file to save
+//
+//        mediaRecorder?.apply {
+//
+//            setOutputFile(fileDescriptor?.fileDescriptor)
+//            setVideoSource(MediaRecorder.VideoSource.SURFACE)
+//            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+//            setVideoEncodingBitRate(5 * 1024 * 1000)
+//            setVideoFrameRate(30)
+//            setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT)
+//            setVideoSize(width, height)
+//            prepare()
+//        }
+//    }
+//
+//    private fun startRecording(activity: Activity) {
+//        if (mediaRecorder != null) {
+//            try {
+//                mediaRecorder?.start()
+//
+//                isRecording.value = true
+//
+//                startRecordCompletedAction?.run()
+//
+//                Toast.makeText(activity, "screenRecording...", Toast.LENGTH_SHORT).show()
+//
+//            } catch (e: Exception) {
+//                System.err.println("[MediaProjection] start error : $e")
+//            }
+//        }
+//    }
+//
+//    fun stopRecording(activity: Activity, action: Action?) {
+//        if (mediaRecorder != null) {
+//            try {
+//                mediaRecorder?.stop()
+//                mediaRecorder?.reset()
+//
+//                virtualDisplayRecord?.release()
+//
+//                projectionRecord?.stop()
+//
+//                isRecording.value = false
+//
+//                fileDescriptor?.close()
+//
+//                action?.run()
+//
+//                Toast.makeText(activity, "stopRecording, File has been saved.", Toast.LENGTH_SHORT).show()
+//
+//            } catch (e: Exception) {
+//                System.err.println("[MediaProjection] start error : $e")
+//            }
+//        }
+//      }
 
-    fun screenRecording(activity: Activity, action: Action?) {
-        startRecordCompletedAction = action
-
-        if (prevIntentData != null) {
-            // If you have received permission even once, proceed without requesting permission
-            getMediaProjectionRecord(activity, prevResultCode, prevIntentData)
-        } else {
-            // permission request
-            projectionManager = activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-            activity.startActivityForResult(projectionManager?.createScreenCaptureIntent(), mediaScreenRecord)
-        }
-    }
-
-    fun getMediaProjectionRecord(activity: Activity, resultCode: Int, intentData: Intent?) {
-        projectionRecord = projectionManager?.getMediaProjection(resultCode, intentData!!)
-
-        if (projectionRecord != null) {
-            prevIntentData = intentData
-            prevResultCode = resultCode
-
-            // Create virtualDisplay
-            createVirtualDisplayRecord(activity)
-
-            // MediaRecorder Start
-            if (virtualDisplayRecord != null) {
-                startRecording(activity)
-            }
-        }
-    }
-
-    private fun createVirtualDisplayRecord(activity: Activity) {
-        val metrics = activity.resources?.displayMetrics!!
-        val density = metrics.densityDpi
-        val flags = DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR
-
-        width = metrics.widthPixels
-        height = metrics.heightPixels
-
-        // MediaRecorder Prepare
-        mediaRecorder = MediaRecorder()
-        prepareRecording(activity)
-
-        // MediaRecorder Surface rendering
-        virtualDisplayRecord = projectionRecord?.createVirtualDisplay(
-            "screenRecord", width, height, density, flags,
-            mediaRecorder?.surface, null, null
-        )
-    }
-
-    fun createFile(activity: Activity): ParcelFileDescriptor? {
-
-        val contentValues = ContentValues()
-        val currentTime = Date(System.currentTimeMillis())
-        val currentTimeStamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.KOREA).format(currentTime)
-
-        contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "MediaProjectionEx$currentTimeStamp.mp4")
-        contentValues.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-        contentValues.put(MediaStore.Video.Media.DATE_ADDED, System.currentTimeMillis());
-
-        val contentResolver = activity.contentResolver
-        val collectionUri = contentResolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-        return contentResolver.openFileDescriptor(collectionUri!!, "w")
-    }
-
-    private fun prepareRecording(activity: Activity) {
-
-        fileDescriptor = createFile(activity) // Create file to save
-
-        mediaRecorder?.apply {
-
-            setOutputFile(fileDescriptor?.fileDescriptor)
-            setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setVideoEncodingBitRate(5 * 1024 * 1000)
-            setVideoFrameRate(30)
-            setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT)
-            setVideoSize(width, height)
-            prepare()
-        }
-    }
-
-    private fun startRecording(activity: Activity) {
-        if (mediaRecorder != null) {
-            try {
-                mediaRecorder?.start()
-
-                isRecording.value = true
-
-                startRecordCompletedAction?.run()
-
-                Toast.makeText(activity, "screenRecording...", Toast.LENGTH_SHORT).show()
-
-            } catch (e: Exception) {
-                System.err.println("[MediaProjection] start error : $e")
-            }
-        }
-    }
-
-    fun stopRecording(activity: Activity, action: Action?) {
-        if (mediaRecorder != null) {
-            try {
-                mediaRecorder?.stop()
-                mediaRecorder?.reset()
-
-                virtualDisplayRecord?.release()
-
-                projectionRecord?.stop()
-
-                isRecording.value = false
-
-                fileDescriptor?.close()
-
-                action?.run()
-
-                Toast.makeText(activity, "stopRecording, File has been saved.", Toast.LENGTH_SHORT).show()
-
-            } catch (e: Exception) {
-                System.err.println("[MediaProjection] start error : $e")
-            }
-        }
-    }
 }

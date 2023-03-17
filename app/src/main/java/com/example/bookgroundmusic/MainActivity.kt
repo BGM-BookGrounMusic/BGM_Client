@@ -22,15 +22,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val serviceAccount = FileInputStream("app/src/main/assets/backgroundmusic-949f0-firebase-adminsdk-1xdu2-d57d4620e7.json")
-
-        val options: FirebaseOptions = FirebaseOptions.Builder()
-            .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-            .setDatabaseUrl("https://backgroundmusic-949f0-default-rtdb.firebaseio.com")
-            .build()
-
-        FirebaseApp.initializeApp(options)
-
+//        // firebase 연동 관련 코드
+//        val serviceAccount = FileInputStream("app/src/main/assets/backgroundmusic-949f0-firebase-adminsdk-1xdu2-d57d4620e7.json")
+//
+//        val options: FirebaseOptions = FirebaseOptions.Builder()
+//            .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+//            .setDatabaseUrl("https://backgroundmusic-949f0-default-rtdb.firebaseio.com")
+//            .build()
+//
+//        FirebaseApp.initializeApp(options)
 
         //permissionCheck()
         startMainService()
@@ -71,9 +71,9 @@ class MainActivity : AppCompatActivity() {
             MediaProjectionController.mediaScreenCapture -> {
                 MediaProjectionController.getMediaProjectionCapture(this, resultCode, data)
             }
-            MediaProjectionController.mediaScreenRecord -> {
-                MediaProjectionController.getMediaProjectionRecord(this, resultCode, data)
-            }
+//            MediaProjectionController.mediaScreenRecord -> {
+//                MediaProjectionController.getMediaProjectionRecord(this, resultCode, data)
+//            }
         }
     }
 
@@ -88,7 +88,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun stopMainService() {
-
         val serviceIntent = Intent(this, MainService::class.java)
         stopService(serviceIntent)
     }
@@ -103,6 +102,7 @@ class MainActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
 
+            // 백그라운드 캡처
             MediaProjectionController.screenCapture(this) { bitmap ->
                 // TODO : You can use the captured image (bitmap)
 
