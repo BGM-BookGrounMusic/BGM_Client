@@ -1,12 +1,14 @@
 package com.example.bookgroundmusic
 
+import android.R
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.auth.oauth2.GoogleCredentials
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
+import com.example.bookgroundmusic.databinding.ActivityMainBinding
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
@@ -16,11 +18,15 @@ import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity() {
+    private var mBinding: ActivityMainBinding? = null
+    private val binding get() = mBinding!!
+
     var dir: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        mBinding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
 //        // firebase 연동 관련 코드
 //        val serviceAccount = FileInputStream("app/src/main/assets/backgroundmusic-949f0-firebase-adminsdk-1xdu2-d57d4620e7.json")
@@ -96,36 +102,23 @@ class MainActivity : AppCompatActivity() {
     private fun setListener() {
         // 1. on 버튼 클릭시
         btn_on.setOnClickListener {
+            Toast.makeText(this, "5초 후 캡처 시작", Toast.LENGTH_LONG).show()
+
             try {
                 TimeUnit.SECONDS.sleep(5)
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
 
-            // 백그라운드 캡처
-            MediaProjectionController.screenCapture(this) { bitmap ->
-                // TODO : You can use the captured image (bitmap)
 
-                // OCR (ML Kit)
-                val options = KoreanTextRecognizerOptions.Builder().build()
-                val recognizer = TextRecognition.getClient(options)
-                val image = InputImage.fromBitmap(bitmap, 0)
 
-                val result = recognizer.process(image)
-                    .addOnSuccessListener { visionText ->
-                        // string to txt file
-                        val fileName = "text.txt"
-
-                        var outputFile : FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-                        outputFile.write(visionText.text.toByteArray())
-                        outputFile.close()
-                    }
-                    .addOnFailureListener { e -> }
 
 
 //                MainApplication.updateNotification(this, "스크린샷")
 //                Toast.makeText(this, "스크린캡처 테스트", Toast.LENGTH_SHORT).show()
-            }
+
+
+
         }
 
         // 2. 사용 설명서 화면으로 이동
