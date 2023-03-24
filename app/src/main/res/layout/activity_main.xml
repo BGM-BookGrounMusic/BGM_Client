@@ -7,7 +7,7 @@
     tools:context=".MainActivity">
 
     <android.widget.Button
-        android:id="@+id/button_guide"
+        android:id="@+id/buttonGuide"
         android:layout_width="101dp"
         android:layout_height="29dp"
         android:layout_marginTop="16dp"
@@ -60,7 +60,7 @@
             android:orientation="vertical" >
 
             <Button
-                android:id="@+id/btn_on"
+                android:id="@+id/btnOn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -292,6 +292,7 @@
         android:foregroundTint="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/View_bottom_bar"
+        android:onClick="playMusic"
         tools:ignore="TouchTargetSizeCheck,SpeakableTextPresentCheck" />
 
     <ImageButton
