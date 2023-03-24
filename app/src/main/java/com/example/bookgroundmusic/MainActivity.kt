@@ -111,9 +111,10 @@ class MainActivity : AppCompatActivity() {
 
         val pathReference = storageReference.child("감성음악/기쁨/001.mp3")
 
+
         // test
         val mediaPlayer : MediaPlayer? = MediaPlayer().apply {
-            setDataSource("https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+            setDataSource("backgroundmusic-949f0.appspot.com/감성음악/기쁨/008.mp3")
             prepare()
             start()
         }
@@ -195,11 +196,17 @@ class MainActivity : AppCompatActivity() {
 
             }
 
-            // 2. 사용 설명서 화면으로 이동
-            binding.buttonGuide.setOnClickListener {
-                val intent = Intent(this, GuideActivity::class.java)
-                startActivity(intent)
             }
+
+        // 2. 사용 설명서 화면으로 이동
+        binding.buttonGuide.setOnClickListener {
+            val intent = Intent(this, GuideActivity::class.java)
+            startActivity(intent)
+        }
+
+        // 3. 음악 재생
+        binding.btnPlay.setOnClickListener() {
+            playMusic()
         }
 
     }
