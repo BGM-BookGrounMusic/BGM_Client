@@ -1,35 +1,20 @@
 package com.example.bookgroundmusic
 
-import android.R
+import android.app.ActivityManager
 import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.view.GestureDetector
-import android.view.MotionEvent
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.bookgroundmusic.databinding.ActivityMainBinding
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.Query
 import com.google.firebase.storage.FirebaseStorage
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
-import org.json.JSONObject
-import java.io.*
+import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
-import org.json.JSONArray
-import kotlin.random.Random
-import java.io.FileInputStream
-import java.time.LocalDateTime
-import java.util.*
-import kotlin.collections.HashMap
-import kotlin.streams.toList
 
 
 class MainActivity : AppCompatActivity() {
@@ -124,13 +109,23 @@ class MainActivity : AppCompatActivity() {
     private fun setListener() {
         // 1. on 버튼 클릭시
         binding.btnOn.setOnClickListener {
-            Toast.makeText(this, "5초 후 캡처 시작", Toast.LENGTH_LONG).show()
 
             try {
                 TimeUnit.SECONDS.sleep(5)
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
+
+            // 최상위 클래스 이름 따오기..?
+            val activityManager = (this.getSystemService(ACTIVITY_SERVICE) as ActivityManager)!!
+            val tasks = activityManager!!.appTasks
+            val topClassName = tasks[0].taskInfo.topActivity!!.className
+
+            Log.d("WJ", topClassName)
+
+
+            Toast.makeText(this, "5초 후 캡처 시작", Toast.LENGTH_LONG).show()
+
 
             // 백그라운드 캡처
             MediaProjectionController.screenCapture(this@MainActivity) { bitmap ->
@@ -210,4 +205,6 @@ class MainActivity : AppCompatActivity() {
         }
 
     }
+
+
 }
