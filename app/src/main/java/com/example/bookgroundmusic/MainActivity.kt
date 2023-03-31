@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.bookgroundmusic.databinding.ActivityMainBinding
@@ -90,20 +91,19 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "버튼 클릭됨", Toast.LENGTH_LONG).show()
 
         val storage = FirebaseStorage.getInstance()
-        val storageReference = storage.getReference()
-
-        val pathReference = storageReference.child("감성음악/기쁨/001.mp3")
-
-
-        // test
-        val mediaPlayer : MediaPlayer? = MediaPlayer().apply {
-            setDataSource("backgroundmusic-949f0.appspot.com/감성음악/기쁨/008.mp3")
-            prepare()
-            start()
+        storage.reference.child("감성음악/슬픔/050.mp3").downloadUrl.addOnSuccessListener {
+            val mediaPlayer = MediaPlayer()
+            mediaPlayer.setDataSource(it.toString())
+            mediaPlayer.setOnPreparedListener { player ->
+                player.start()
+            }
+            mediaPlayer.prepareAsync()
         }
+
     }
 
-    private fun shotshot() {
+    // 일정 시간 간격 연속 스크린샷
+    private fun screenshotSeries() {
         // OCR (ML Kit)
         val options = KoreanTextRecognizerOptions.Builder().build()
         val recognizer = TextRecognition.getClient(options)
@@ -113,25 +113,25 @@ class MainActivity : AppCompatActivity() {
             override fun run() {
                 var i = 1
                 if (i in 1..3) {
+                    // 백그라운드 캡처
                     MediaProjectionController.screenCapture(this@MainActivity) { bitmap ->
-                        // TODO : You can use the captured image (bitmap)
 
-                        var image = InputImage.fromBitmap(bitmap, 0)
+                        val image = InputImage.fromBitmap(bitmap, 0)
 
-                        var list = listOf("text", i.toString(), ".txt")
-                        var result = recognizer.process(image)
-                            .addOnSuccessListener { visionText ->
-                                // string to txt file
-                                var fileName = list.joinToString("")
+                        val result = recognizer.process(image)
+                             .addOnSuccessListener { visionText ->
+                                 // string to txt file
+                                val fileName = "text.txt"
 
-                                var outputFile: FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-                                outputFile.write(visionText.text.toByteArray())
-                                outputFile.flush()
-                                outputFile.close()
-                                i++
-                            }
-                            .addOnFailureListener { e -> }
+                        var outputFile: FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
+                        outputFile.write(visionText.text.toByteArray())
+                        outputFile.close()
+                        Log.d("WJ", visionText.text.toString())
                     }
+                    .addOnFailureListener { e -> }
+                    }
+
+                    i++
                     handler.postDelayed(this, 10000)
                 }
             }
@@ -152,61 +152,18 @@ class MainActivity : AppCompatActivity() {
 
 
             Toast.makeText(this, "10초 후 캡처 시작", Toast.LENGTH_LONG).show()
-            shotshot()
 
-//            // 백그라운드 캡처
-//            MediaProjectionController.screenCapture(this@MainActivity) { bitmap ->
-//                // TODO : You can use the captured image (bitmap)
-//
-//                // OCR (ML Kit)
-//                val options = KoreanTextRecognizerOptions.Builder().build()
-//                val recognizer = TextRecognition.getClient(options)
-//                val image = InputImage.fromBitmap(bitmap, 0)
-//
-//                val result = recognizer.process(image)
-//                    .addOnSuccessListener { visionText ->
-//                        // string to txt file
-//                        val fileName = "text.txt"
-//
-//                        var outputFile: FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-//                        outputFile.write(visionText.text.toByteArray())
-//                        outputFile.close()
-//                    }
-//                    .addOnFailureListener { e -> }
-
-//
-//                // 보영 코드
-//                // firebase 연동 관련 코드
-//                val serviceAccount =
-//                    FileInputStream("app/src/main/assets/backgroundmusic-949f0-firebase-adminsdk-1xdu2-d57d4620e7.json")
-//
-//                val option: FirebaseOptions = FirebaseOptions.Builder()
-//                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-//                    .setDatabaseUrl("https://backgroundmusic-949f0-default-rtdb.firebaseio.com")
-//                    .setStorageBucket("backgroundmusic-949f0.appspot.com")
-//                    .build()
-//
-//                FirebaseApp.initializeApp(option)
-//
-//                //val database: DatabaseReference
-//                val bucket = FirebaseStorage.getInstance()
-//
-//
-//                val database = FirebaseDatabase.getInstance().getReference()
-//
-
-
-//                MainApplication.updateNotification(this, "스크린샷")
-
-            //}
+            screenshotSeries()
 
             }
+
 
         // 2. 사용 설명서 화면으로 이동
         binding.buttonGuide.setOnClickListener {
             val intent = Intent(this, GuideActivity::class.java)
             startActivity(intent)
         }
+
 
         // 3. 음악 재생
         binding.btnPlay.setOnClickListener() {
