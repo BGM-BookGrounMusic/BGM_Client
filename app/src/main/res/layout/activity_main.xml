@@ -65,8 +65,10 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_margin="15sp"
+                android:backgroundTint="@color/brown_3"
                 android:padding="10sp"
-                android:text="ON 버튼 (예정)" />
+                android:text="ON"
+                android:textSize="16dp"/>
 
             <RelativeLayout
                 android:layout_width="match_parent"
