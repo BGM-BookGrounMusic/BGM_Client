@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
     private val binding get() = mBinding!!
 
     // 음악 재생 판별용
-    var isPaused = false
+    var isPaused = true
     val player = MediaPlayer()
     val storage = FirebaseStorage.getInstance()
 
@@ -35,8 +35,7 @@ class MainActivity : AppCompatActivity() {
         startMainService()
         //initializeView()
         setListener()
-
-
+        checkRemainTime()
 
         // 아래 코드처럼 모드나 음악 설정 시 Textview 클릭 시 글자색 바뀌는 걸로 하고, 실질적으로 서버에는 boolean 값 넘겨주면 될 것 같음
 
@@ -94,6 +93,7 @@ class MainActivity : AppCompatActivity() {
         stopService(serviceIntent)
     }
 
+
     // 음악 재생, 일시 정지
     fun musicControl() {
         player.setAudioStreamType(AudioManager.STREAM_MUSIC)
@@ -101,24 +101,33 @@ class MainActivity : AppCompatActivity() {
         // 재생 안되고 있는 상태 => play 시키기
         if (isPaused) {
             try {
-                storage.reference.child("감성음악/분노/anger1.mp3").downloadUrl.addOnSuccessListener {
+                storage.reference.child("감성음악/슬픔/050.mp3").downloadUrl.addOnSuccessListener {
                     player.setDataSource(it.toString())
+                    player.prepare()
                     player.start()
                 }
             } catch (e: Exception) {
                 // TODO: handle exception
             }
+
             isPaused = false
-            binding.btnPlay.setImageResource(R.drawable.ic_stop)
+            Toast.makeText(this, "재생 시작함", Toast.LENGTH_LONG).show()
+           // binding.btnPlay.setImageResource(R.drawable.ic_stop)
         }
 
         // 재생 중인 상태 => pause 시키기
         else if (!isPaused) {
             player.pause()
             isPaused = true
-            binding.btnPlay.setImageResource(R.drawable.ic_play)
+            Toast.makeText(this, "일시정지함", Toast.LENGTH_LONG).show()
+            //binding.btnPlay.setImageResource(R.drawable.ic_play)
         }
     }
+
+
+    //
+    // Resume 구현해야함
+    //
 
 
     // 일정 시간 간격 연속 스크린샷
@@ -158,12 +167,17 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    // 재생 중일 때 남은 시간 체크
-    private fun remainTimeCheck() {
-        if (!isPaused) {
+    private fun checkRemainTime() {
+        // 재생 중일 동안 남는 시간 계산 -> ??초일 때 연속 스크린샷
+        while (player != null && player.isPlaying) {
             var total_duration = player.duration
             var remainingTime = total_duration - player.currentPosition
 
+            // 남은 시간이 ??초일 때 스크린샷
+            if (remainingTime == 15000) {
+                Toast.makeText(this, "재생시간 15초 남아 스크린샷 시작", Toast.LENGTH_LONG).show()
+                screenshotSeries()
+            }
         }
     }
 
@@ -179,8 +193,8 @@ class MainActivity : AppCompatActivity() {
 //            Log.d("WJ", topClassName)
 
 
-            Toast.makeText(this, "10초 후 캡처 시작", Toast.LENGTH_LONG).show()
-
+//            Toast.makeText(this, "10초 후 캡처 시작", Toast.LENGTH_LONG).show()
+//
             screenshotSeries()
 
             }

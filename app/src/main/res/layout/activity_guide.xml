@@ -39,8 +39,7 @@
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="0dp"
-        android:layout_marginTop="72dp"
-        android:layout_marginBottom="-53dp">
+        android:layout_marginTop="72dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -133,14 +132,13 @@
                 android:paddingLeft="30dp"
                 android:paddingTop="0dp"
                 android:paddingRight="30dp"
-                android:paddingBottom="10dp"
+                android:paddingBottom="40dp"
                 android:text="A. OCR을 진행하기 위한 전자책 화면의 스크린샷은 상업적 용도로 사용되지 않고 감성분석의 용도로만 사용되어, 저작권 침해라고 보기 어려우니 안심하셔도 됩니다. (관련 법률: 공표된 저작물을 영리를 목적으로 하지 아니하고 개인적으로 이용하거나 가정과 이에 준하는 한정된 범위 안에서 이용하는 경우에는 그 이용자는 이를 복제할 수 있다.)"
                 android:textColor="@color/black"
                 android:textSize="15dp">
             </TextView>
-
-
         </LinearLayout>
+
     </ScrollView>
 
 </RelativeLayout>
