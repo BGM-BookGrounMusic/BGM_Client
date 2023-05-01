@@ -1,6 +1,7 @@
 package com.example.bookgroundmusic
 
 import android.content.Intent
+import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +21,11 @@ class MainActivity : AppCompatActivity() {
     private var mBinding: ActivityMainBinding? = null
     private val binding get() = mBinding!!
 
+    // 음악 재생 판별용
+    var isPaused = false
+    val player = MediaPlayer()
+    val storage = FirebaseStorage.getInstance()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -29,6 +35,8 @@ class MainActivity : AppCompatActivity() {
         startMainService()
         //initializeView()
         setListener()
+
+
 
         // 아래 코드처럼 모드나 음악 설정 시 Textview 클릭 시 글자색 바뀌는 걸로 하고, 실질적으로 서버에는 boolean 값 넘겨주면 될 것 같음
 
@@ -86,21 +94,32 @@ class MainActivity : AppCompatActivity() {
         stopService(serviceIntent)
     }
 
-    // 음악 재생하도록
-    private fun playMusic() {
-        Toast.makeText(this, "버튼 클릭됨", Toast.LENGTH_LONG).show()
+    // 음악 재생, 일시 정지
+    fun musicControl() {
+        player.setAudioStreamType(AudioManager.STREAM_MUSIC)
 
-        val storage = FirebaseStorage.getInstance()
-        storage.reference.child("감성음악/슬픔/050.mp3").downloadUrl.addOnSuccessListener {
-            val mediaPlayer = MediaPlayer()
-            mediaPlayer.setDataSource(it.toString())
-            mediaPlayer.setOnPreparedListener { player ->
-                player.start()
+        // 재생 안되고 있는 상태 => play 시키기
+        if (isPaused) {
+            try {
+                storage.reference.child("감성음악/분노/anger1.mp3").downloadUrl.addOnSuccessListener {
+                    player.setDataSource(it.toString())
+                    player.start()
+                }
+            } catch (e: Exception) {
+                // TODO: handle exception
             }
-            mediaPlayer.prepareAsync()
+            isPaused = false
+            binding.btnPlay.setImageResource(R.drawable.ic_stop)
         }
 
+        // 재생 중인 상태 => pause 시키기
+        else if (!isPaused) {
+            player.pause()
+            isPaused = true
+            binding.btnPlay.setImageResource(R.drawable.ic_play)
+        }
     }
+
 
     // 일정 시간 간격 연속 스크린샷
     private fun screenshotSeries() {
@@ -139,6 +158,15 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    // 재생 중일 때 남은 시간 체크
+    private fun remainTimeCheck() {
+        if (!isPaused) {
+            var total_duration = player.duration
+            var remainingTime = total_duration - player.currentPosition
+
+        }
+    }
+
     private fun setListener() {
         // 1. on 버튼 클릭시
         binding.btnOn.setOnClickListener {
@@ -167,7 +195,8 @@ class MainActivity : AppCompatActivity() {
 
         // 3. 음악 재생
         binding.btnPlay.setOnClickListener() {
-            playMusic()
+            musicControl()
+
         }
 
     }
