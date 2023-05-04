@@ -6,6 +6,7 @@ import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +16,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
 import java.io.FileOutputStream
+import java.text.DecimalFormat
 
 
 class MainActivity : AppCompatActivity() {
@@ -26,6 +28,33 @@ class MainActivity : AppCompatActivity() {
     val player = MediaPlayer()
     val storage = FirebaseStorage.getInstance()
 
+    private val handler = Handler(Looper.getMainLooper())
+
+//    private val checkRemainTimeRunnable = object : Runnable {
+//        override fun run() {
+//            if (player != null && player.isPlaying) {
+//                val total_duration = player.duration
+//                val remainingTime = total_duration - player.currentPosition
+//                Log.d("WJ", remainingTime.toString() + "초 남음")
+//
+//                // 남은 시간이 15초일 때 스크린샷
+//                if (remainingTime <= 15000) {
+//                    Toast.makeText(this@MainActivity, "재생시간 15초 남아 스크린샷 시작", Toast.LENGTH_LONG).show()
+//                    screenshotSeries()
+//                }
+//            }
+//            handler.postDelayed(this, 1000) // run every second
+//        }
+//    }
+//
+//    fun startCheckingRemainTime() {
+//        handler.postDelayed(checkRemainTimeRunnable, 1000) // start checking after 1 second
+//    }
+//
+//    fun stopCheckingRemainTime() {
+//        handler.removeCallbacks(checkRemainTimeRunnable)
+//    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -35,7 +64,9 @@ class MainActivity : AppCompatActivity() {
         startMainService()
         //initializeView()
         setListener()
-        checkRemainTime()
+        //checkRemainTime()
+        //startCheckingRemainTime()
+
 
         // 아래 코드처럼 모드나 음악 설정 시 Textview 클릭 시 글자색 바뀌는 걸로 하고, 실질적으로 서버에는 boolean 값 넘겨주면 될 것 같음
 
@@ -51,18 +82,11 @@ class MainActivity : AppCompatActivity() {
 //            }
 //        })
 
-
     }
-
-//    // Root : 슈퍼유저 권한 주기
-//    var p: Process? = null
-//
-//    init {
-//        var p = java.lang.Runtime.getRuntime().exec("su")
-//    }
 
     override fun onDestroy() {
         super.onDestroy()
+        //stopCheckingRemainTime()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -72,9 +96,6 @@ class MainActivity : AppCompatActivity() {
             MediaProjectionController.mediaScreenCapture -> {
                 MediaProjectionController.getMediaProjectionCapture(this, resultCode, data)
             }
-//            MediaProjectionController.mediaScreenRecord -> {
-//                MediaProjectionController.getMediaProjectionRecord(this, resultCode, data)
-//            }
         }
     }
 
@@ -86,6 +107,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             startService(serviceIntent)
         }
+
     }
 
     private fun stopMainService() {
@@ -106,6 +128,8 @@ class MainActivity : AppCompatActivity() {
                     player.prepare()
                     player.start()
                 }
+
+
             } catch (e: Exception) {
                 // TODO: handle exception
             }
@@ -119,14 +143,21 @@ class MainActivity : AppCompatActivity() {
         else if (!isPaused) {
             player.pause()
             isPaused = true
-            Toast.makeText(this, "일시정지함", Toast.LENGTH_LONG).show()
+
+            val total_duration = player.duration
+            val remainingTime = total_duration - player.currentPosition
+            val remainingSecs = remainingTime / 1000
+            val df = DecimalFormat("#")
+            val formattedRemainingTime = df.format(remainingSecs)
+
+            Toast.makeText(this, "일시정지함, " + "남은 시간 " + formattedRemainingTime, Toast.LENGTH_LONG).show()
             //binding.btnPlay.setImageResource(R.drawable.ic_play)
         }
     }
 
 
     //
-    // Resume 구현해야함
+    // 음악 Resume 구현 필요
     //
 
 
@@ -135,11 +166,12 @@ class MainActivity : AppCompatActivity() {
         // OCR (ML Kit)
         val options = KoreanTextRecognizerOptions.Builder().build()
         val recognizer = TextRecognition.getClient(options)
+        val intervalMillis = 30000
 
+        var i = 1
         val handler = Handler()
         handler.postDelayed(object : Runnable {
             override fun run() {
-                var i = 1
                 if (i in 1..3) {
                     // 백그라운드 캡처
                     MediaProjectionController.screenCapture(this@MainActivity) { bitmap ->
@@ -160,42 +192,19 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     i++
-                    handler.postDelayed(this, 10000)
+                    handler.postDelayed(this, intervalMillis.toLong())
                 }
             }
         }, 10000)
     }
 
 
-    private fun checkRemainTime() {
-        // 재생 중일 동안 남는 시간 계산 -> ??초일 때 연속 스크린샷
-        while (player != null && player.isPlaying) {
-            var total_duration = player.duration
-            var remainingTime = total_duration - player.currentPosition
-
-            // 남은 시간이 ??초일 때 스크린샷
-            if (remainingTime == 15000) {
-                Toast.makeText(this, "재생시간 15초 남아 스크린샷 시작", Toast.LENGTH_LONG).show()
-                screenshotSeries()
-            }
-        }
-    }
-
     private fun setListener() {
         // 1. on 버튼 클릭시
         binding.btnOn.setOnClickListener {
+            // 처음이면 중립음악 먼저 틀고 분석 시작 하도록 이후 구현
 
-//            // 최상위 패키지 이름 따오기..?
-//            val activityManager = (this.getSystemService(ACTIVITY_SERVICE) as ActivityManager)!!
-//            val tasks = activityManager!!.appTasks
-//            val topClassName = tasks[0].taskInfo.topActivity!!.className
-//
-//            Log.d("WJ", topClassName)
-
-
-//            Toast.makeText(this, "10초 후 캡처 시작", Toast.LENGTH_LONG).show()
-//
-            screenshotSeries()
+           screenshotSeries()
 
             }
 
@@ -210,7 +219,6 @@ class MainActivity : AppCompatActivity() {
         // 3. 음악 재생
         binding.btnPlay.setOnClickListener() {
             musicControl()
-
         }
 
     }
