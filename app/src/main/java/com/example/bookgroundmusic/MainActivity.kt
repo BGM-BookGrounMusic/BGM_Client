@@ -30,30 +30,22 @@ class MainActivity : AppCompatActivity() {
 
     private val handler = Handler(Looper.getMainLooper())
 
-//    private val checkRemainTimeRunnable = object : Runnable {
-//        override fun run() {
-//            if (player != null && player.isPlaying) {
-//                val total_duration = player.duration
-//                val remainingTime = total_duration - player.currentPosition
-//                Log.d("WJ", remainingTime.toString() + "초 남음")
-//
-//                // 남은 시간이 15초일 때 스크린샷
-//                if (remainingTime <= 15000) {
-//                    Toast.makeText(this@MainActivity, "재생시간 15초 남아 스크린샷 시작", Toast.LENGTH_LONG).show()
-//                    screenshotSeries()
-//                }
-//            }
-//            handler.postDelayed(this, 1000) // run every second
-//        }
-//    }
-//
-//    fun startCheckingRemainTime() {
-//        handler.postDelayed(checkRemainTimeRunnable, 1000) // start checking after 1 second
-//    }
-//
-//    fun stopCheckingRemainTime() {
-//        handler.removeCallbacks(checkRemainTimeRunnable)
-//    }
+    private val checkRemainTimeRunnable = object : Runnable {
+        override fun run() {
+            val total_duration = player.duration
+            val remainingTime = total_duration - player.currentPosition
+            val remainingSecs = remainingTime / 1000
+            val df = DecimalFormat("#")
+            val formattedRemainingTime = df.format(remainingSecs)
+
+            // 남은 시간이 15초일 때 스크린샷
+            if (remainingSecs == 15) {
+                Log.d("WJ", formattedRemainingTime + "초 남음")    // 성공
+                screenshotSeries()
+            }
+            handler.postDelayed(this, 1000) // run every second
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,8 +56,6 @@ class MainActivity : AppCompatActivity() {
         startMainService()
         //initializeView()
         setListener()
-        //checkRemainTime()
-        //startCheckingRemainTime()
 
 
         // 아래 코드처럼 모드나 음악 설정 시 Textview 클릭 시 글자색 바뀌는 걸로 하고, 실질적으로 서버에는 boolean 값 넘겨주면 될 것 같음
@@ -86,7 +76,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        //stopCheckingRemainTime()
+        stopCheckingRemainTime()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -115,6 +105,14 @@ class MainActivity : AppCompatActivity() {
         stopService(serviceIntent)
     }
 
+    // 음악 남은 시간 알아내기
+    private fun startCheckingRemainTime() {
+        handler.postDelayed(checkRemainTimeRunnable, 1000) // start checking after 1 second
+    }
+
+    private fun stopCheckingRemainTime() {
+        handler.removeCallbacks(checkRemainTimeRunnable)
+    }
 
     // 음악 재생, 일시 정지
     fun musicControl() {
@@ -137,6 +135,8 @@ class MainActivity : AppCompatActivity() {
             isPaused = false
             Toast.makeText(this, "재생 시작함", Toast.LENGTH_LONG).show()
            // binding.btnPlay.setImageResource(R.drawable.ic_stop)
+
+            startCheckingRemainTime()
         }
 
         // 재생 중인 상태 => pause 시키기
