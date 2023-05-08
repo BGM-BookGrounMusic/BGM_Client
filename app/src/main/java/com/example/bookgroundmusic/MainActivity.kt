@@ -1,6 +1,7 @@
 package com.example.bookgroundmusic
 
 import android.content.Intent
+import android.graphics.Color
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Build
@@ -27,6 +28,18 @@ class MainActivity : AppCompatActivity() {
     var isPaused = true
     val player = MediaPlayer()
     val storage = FirebaseStorage.getInstance()
+
+
+    // 모드 확인용
+    var only_bgm = false
+    var only_asmr = false
+    var mode_mix = false
+
+    // 장르 확인용
+    var asmr = false
+    var lofi = false
+    var jazz = false
+    var cl = false
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -56,22 +69,8 @@ class MainActivity : AppCompatActivity() {
         startMainService()
         //initializeView()
         setListener()
-
-
-        // 아래 코드처럼 모드나 음악 설정 시 Textview 클릭 시 글자색 바뀌는 걸로 하고, 실질적으로 서버에는 boolean 값 넘겨주면 될 것 같음
-
-//        val mode_1 = findViewById<TextView>(R.id.mode_1)
-//        var only_bgm = false
-//        mode_1.setOnClickListener(View.OnClickListener {
-//            if (!only_bgm) {
-//                mode_1.setTextColor(Color.parseColor("#FF730D"))
-//                only_bgm = true
-//            } else {
-//                mode_1.setTextColor(Color.parseColor("#000000"))
-//                only_bgm = false
-//            }
-//        })
-
+        modeCheck()
+        genreCheck()
     }
 
     override fun onDestroy() {
@@ -114,6 +113,7 @@ class MainActivity : AppCompatActivity() {
         handler.removeCallbacks(checkRemainTimeRunnable)
     }
 
+
     // 음악 재생, 일시 정지
     fun musicControl() {
         player.setAudioStreamType(AudioManager.STREAM_MUSIC)
@@ -134,7 +134,6 @@ class MainActivity : AppCompatActivity() {
 
             isPaused = false
             Toast.makeText(this, "재생 시작함", Toast.LENGTH_LONG).show()
-           // binding.btnPlay.setImageResource(R.drawable.ic_stop)
 
             startCheckingRemainTime()
         }
@@ -151,7 +150,6 @@ class MainActivity : AppCompatActivity() {
             val formattedRemainingTime = df.format(remainingSecs)
 
             Toast.makeText(this, "일시정지함, " + "남은 시간 " + formattedRemainingTime, Toast.LENGTH_LONG).show()
-            //binding.btnPlay.setImageResource(R.drawable.ic_play)
         }
     }
 
@@ -202,9 +200,25 @@ class MainActivity : AppCompatActivity() {
     private fun setListener() {
         // 1. on 버튼 클릭시
         binding.btnOn.setOnClickListener {
-            // 처음이면 중립음악 먼저 틀고 분석 시작 하도록 이후 구현
+            // 버튼 클릭 시 텍스트 변환
+            if (binding.btnOn.text == "시작하기") {
+                // 모드 or 장르 체크 안 했을 경우
+                if ((!only_asmr && !only_bgm && !mode_mix) || (!asmr && !lofi && !jazz && !cl)) {
+                    Toast.makeText(this, "모드 및 장르 설정을 모두 완료하였는지 다시 한번 확인해주세요.", Toast.LENGTH_LONG).show()
+               }
+                else {
+                    binding.btnOn.setText("중지")
+                    Toast.makeText(this, "지금부터 분석을 시작합니다.\n잠시 후, 책의 분위기에 어울리는 노래를 들려드립니다!", Toast.LENGTH_LONG).show()
+                    musicControl()
+                }
+            } else {
+                binding.btnOn.setText("시작하기")
+                Toast.makeText(this, "분석을 중지합니다.\n'시작하기' 버튼을 다시 누르면, 배경음악이 다시 재생됩니다.", Toast.LENGTH_LONG).show()
+                musicControl()
+            }
 
-           screenshotSeries()
+
+            // 처음이면 중립음악 먼저 틀고 분석 시작 하도록 이후 구현
 
             }
 
@@ -216,12 +230,133 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        // 3. 음악 재생
-        binding.btnPlay.setOnClickListener() {
-            musicControl()
+    }
+
+    // 모드 확인
+    private fun modeCheck() {
+        binding.mode1.setOnClickListener {
+            if (!only_bgm) {
+                if (only_asmr || mode_mix) {
+                    only_asmr = false
+                    mode_mix = false
+                    binding.mode2.setTextColor(Color.parseColor("#000000"))
+                    binding.mode3.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.mode1.setTextColor(Color.parseColor("#FF730D"))
+                only_bgm = true
+            } else {
+                binding.mode1.setTextColor(Color.parseColor("#000000"))
+                only_bgm = false
+            }
+        }
+
+        binding.mode2.setOnClickListener {
+            if (!only_asmr) {
+                if (only_bgm || mode_mix) {
+                    only_bgm = false
+                    mode_mix = false
+                    binding.mode1.setTextColor(Color.parseColor("#000000"))
+                    binding.mode3.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.mode2.setTextColor(Color.parseColor("#FF730D"))
+                only_asmr = true
+            } else {
+                binding.mode2.setTextColor(Color.parseColor("#000000"))
+                only_asmr = false
+            }
+        }
+
+        binding.mode3.setOnClickListener {
+            if (!mode_mix) {
+                if (only_asmr || only_bgm) {
+                    only_asmr = false
+                    only_bgm = false
+                    binding.mode2.setTextColor(Color.parseColor("#000000"))
+                    binding.mode1.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.mode3.setTextColor(Color.parseColor("#FF730D"))
+                mode_mix = true
+            } else {
+                binding.mode3.setTextColor(Color.parseColor("#000000"))
+                mode_mix = false
+            }
         }
 
     }
 
+    // 장르 확인
+    private fun genreCheck() {
+        binding.genre1.setOnClickListener {
+            if (!asmr) {
+                if (lofi || jazz || cl) {
+                    lofi = false
+                    jazz = false
+                    cl = false
+                    binding.genre2.setTextColor(Color.parseColor("#000000"))
+                    binding.genre3.setTextColor(Color.parseColor("#000000"))
+                    binding.genre4.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.genre1.setTextColor(Color.parseColor("#FF730D"))
+                asmr = true
+            } else {
+                binding.genre1.setTextColor(Color.parseColor("#000000"))
+                asmr = false
+            }
+        }
+
+        binding.genre2.setOnClickListener {
+            if (!lofi) {
+                if (asmr || jazz || cl) {
+                    asmr = false
+                    jazz = false
+                    cl = false
+                    binding.genre1.setTextColor(Color.parseColor("#000000"))
+                    binding.genre3.setTextColor(Color.parseColor("#000000"))
+                    binding.genre4.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.genre2.setTextColor(Color.parseColor("#FF730D"))
+                lofi = true
+            } else {
+                binding.genre2.setTextColor(Color.parseColor("#000000"))
+                lofi = false
+            }
+        }
+
+        binding.genre3.setOnClickListener {
+            if (!jazz) {
+                if (lofi || asmr || cl) {
+                    lofi = false
+                    asmr = false
+                    cl = false
+                    binding.genre2.setTextColor(Color.parseColor("#000000"))
+                    binding.genre1.setTextColor(Color.parseColor("#000000"))
+                    binding.genre4.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.genre3.setTextColor(Color.parseColor("#FF730D"))
+                jazz = true
+            } else {
+                binding.genre3.setTextColor(Color.parseColor("#000000"))
+                jazz = false
+            }
+        }
+
+        binding.genre4.setOnClickListener {
+            if (!cl) {
+                if (lofi || jazz || asmr) {
+                    lofi = false
+                    jazz = false
+                    asmr = false
+                    binding.genre2.setTextColor(Color.parseColor("#000000"))
+                    binding.genre3.setTextColor(Color.parseColor("#000000"))
+                    binding.genre1.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.genre4.setTextColor(Color.parseColor("#FF730D"))
+                cl = true
+            } else {
+                binding.genre4.setTextColor(Color.parseColor("#000000"))
+                cl = false
+            }
+        }
+    }
 
 }
