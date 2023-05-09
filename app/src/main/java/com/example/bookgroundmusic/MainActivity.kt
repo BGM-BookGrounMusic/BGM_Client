@@ -11,18 +11,25 @@ import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.bookgroundmusic.DataClass.SentimentAnalysisResponse
 import com.example.bookgroundmusic.databinding.ActivityMainBinding
 import com.google.firebase.storage.FirebaseStorage
+import com.google.gson.Gson
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.korean.KoreanTextRecognizerOptions
 import java.io.FileOutputStream
 import java.text.DecimalFormat
+import okhttp3.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import org.json.JSONObject
+import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
     private var mBinding: ActivityMainBinding? = null
     private val binding get() = mBinding!!
+    private val gson = Gson()
 
     // 음악 재생 판별용
     var isPaused = true
@@ -185,6 +192,9 @@ class MainActivity : AppCompatActivity() {
                         outputFile.write(visionText.text.toByteArray())
                         outputFile.close()
                         Log.d("WJ", visionText.text.toString())
+
+                        //Sentiment 받아오기
+                        callSentimentAnalysisAPI(visionText.text.toString())
                     }
                     .addOnFailureListener { e -> }
                     }
@@ -196,6 +206,48 @@ class MainActivity : AppCompatActivity() {
         }, 10000)
     }
 
+    //감성분석 Clova sentiment
+    private fun callSentimentAnalysisAPI(text: String) {
+        val url = "https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze"
+        val client = OkHttpClient()
+        val jsonBody = JSONObject()
+            .put("document", JSONObject().put("content", text))
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonBody.toString())
+        val request = Request.Builder()
+            .url(url)
+            .addHeader("X-NCP-APIGW-API-KEY-ID", "hzpldolb38")
+            .addHeader("X-NCP-APIGW-API-KEY", "xRLUPCPWT8XpNDWXOQOgiSgKxz1XNpgcjMYixloY")
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // API 호출 실패 처리
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                // API 호출 성공 처리
+                val jsonResult = response.body?.string()
+                val responseObject = gson.fromJson(jsonResult, SentimentAnalysisResponse::class.java)
+
+                // 전체 문장 감정 정보 로그 출력
+                Log.d("MainActivity", "전체 문장 감정: ${responseObject.document.sentiment}")
+                Log.d("MainActivity", "중립 감정 확률: ${responseObject.document.confidence.neutral}")
+                Log.d("MainActivity", "긍정 감정 확률: ${responseObject.document.confidence.positive}")
+                Log.d("MainActivity", "부정 감정 확률: ${responseObject.document.confidence.negative}")
+
+                // 분류 문장 감정 정보 로그 출력
+                for (sentence in responseObject.sentences) {
+                    Log.d("MainActivity", "분류 문장: ${sentence.content}")
+                    Log.d("MainActivity", "분류 문장 감정: ${sentence.sentiment}")
+                    Log.d("MainActivity", "중립 감정 확률: ${sentence.confidence.neutral}")
+                    Log.d("MainActivity", "긍정 감정 확률: ${sentence.confidence.positive}")
+                    Log.d("MainActivity", "부정 감정 확률: ${sentence.confidence.negative}")
+                }
+            }
+        })
+    }
 
     private fun setListener() {
         // 1. on 버튼 클릭시
