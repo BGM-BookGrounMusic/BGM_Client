@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.bookgroundmusic.DataClass.SentimentAnalysisResponse
@@ -211,7 +212,7 @@ class MainActivity : AppCompatActivity() {
         val url = "https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze"
         val client = OkHttpClient()
         val jsonBody = JSONObject()
-            .put("document", JSONObject().put("content", text))
+            .put("content", text)
         val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonBody.toString())
         val request = Request.Builder()
             .url(url)
@@ -230,27 +231,39 @@ class MainActivity : AppCompatActivity() {
                 // API 호출 성공 처리
                 val jsonResult = response.body?.string()
                 val responseObject = gson.fromJson(jsonResult, SentimentAnalysisResponse::class.java)
+                Log.d("API Response", jsonResult ?: "")
 
-                // 전체 문장 감정 정보 로그 출력
-                Log.d("MainActivity", "전체 문장 감정: ${responseObject.document.sentiment}")
-                Log.d("MainActivity", "중립 감정 확률: ${responseObject.document.confidence.neutral}")
-                Log.d("MainActivity", "긍정 감정 확률: ${responseObject.document.confidence.positive}")
-                Log.d("MainActivity", "부정 감정 확률: ${responseObject.document.confidence.negative}")
-
-                // 분류 문장 감정 정보 로그 출력
-                for (sentence in responseObject.sentences) {
-                    Log.d("MainActivity", "분류 문장: ${sentence.content}")
-                    Log.d("MainActivity", "분류 문장 감정: ${sentence.sentiment}")
-                    Log.d("MainActivity", "중립 감정 확률: ${sentence.confidence.neutral}")
-                    Log.d("MainActivity", "긍정 감정 확률: ${sentence.confidence.positive}")
-                    Log.d("MainActivity", "부정 감정 확률: ${sentence.confidence.negative}")
+                if (responseObject.document == null){
+                    Log.d("ERROR","분석이 제대로 완료되지 않았습니다.")
                 }
+
+                if (responseObject.document != null) {
+                    // 전체 문장 감정 정보 로그 출력
+                    Log.d("MainActivity", "전체 문장 감정: ${responseObject.document.sentiment}")
+                    Log.d("MainActivity", "중립 감정 확률: ${responseObject.document.confidence.neutral}")
+                    Log.d("MainActivity", "긍정 감정 확률: ${responseObject.document.confidence.positive}")
+                    Log.d("MainActivity", "부정 감정 확률: ${responseObject.document.confidence.negative}")
+                }
+                /* 나중에 필요하면 쓰깅~~~
+                if (responseObject.sentences != null) {
+                    for (sentence in responseObject.sentences) {
+                        if (sentence.sentiment != null) {
+                            // 분류 문장 감정 정보 로그 출력
+                            Log.d("MainActivity", "분류 문장: ${sentence.content}")
+                            Log.d("MainActivity", "문장 감정: ${sentence.sentiment}")
+                            Log.d("MainActivity", "중립 감정 확률: ${sentence.confidence.neutral}")
+                            Log.d("MainActivity", "긍정 감정 확률: ${sentence.confidence.positive}")
+                            Log.d("MainActivity", "부정 감정 확률: ${sentence.confidence.negative}")
+                        }
+                    }
+                }
+                 */
             }
         })
     }
 
     private fun setListener() {
-        // 1. on 버튼 클릭시
+        // 1. 시작하기 버튼 클릭시
         binding.btnOn.setOnClickListener {
             // 버튼 클릭 시 텍스트 변환
             if (binding.btnOn.text == "시작하기") {
@@ -281,7 +294,13 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
+        // 3. 서영 감성분석 테스트
+        binding.buttonTest.setOnClickListener {
+            val etTest = findViewById<EditText>(R.id.et_test)
+            //Sentiment 받아오기
+            //callSentimentAnalysisAPI("시간이 약이라는 말이 두 사람에게도 유효한 것처럼 보일 정도였다. 부부는 그러다가도 이야깃거리만 있으면 끝도 없이 아이 이야기를 했다. 예전에는 울기만 했으나, 지금은 웃기만 하다 끝나는 날도 더러 있었다. 두 사람은 아이 이야기를 굳이 피하지 않았다. 처음에는 애써 잊으려고, 잊어야 산다고 생각했으나 결국 잊을 수 없다는 것을 깨닫는 데 얼마 걸리지 않았다. 문득 장난감 광고를 볼 때, 노란 버스가 지나갈 때, 어린이 보호구역 표지판을 볼 때, 어린 아역배우가 잘 자란 모습을 볼 때, 그리고 입학 시즌과 졸업 시즌을 지날 때마다 속수무책으로 무너지게 되는 것이었다. 아내는 아이의 잠든 얼굴이 보고 싶다고 했다. 남편은 목욕하고 나와 푹 안기던 포근한 살 냄새가 그립다고 했다. 두 사람의 목소리 사이에 스며들던 웃음소리. 두 사람을 골고루 빼닮은 우스운 버릇들. 아이는 5살에 멈춰버린 채, 둘만 늙어가는 시간이 너무나도 더디게 느껴졌다. 두 사람 모두 차라리 아이가 너무 외지 않을 때, 늦기 전에 보러 가고 싶다는 생각을 한 적이 있지만 차마 입 밖에는 낼 수 없었다. 그날 밤, 두 사람은 침대에 누워 등을 맞대고 돌아누웠다. 부부는 딱 아이가 누울 만큼의 자리를 습관처럼 남기고 누웠다. 그 공간이 서로의 울음소리가 들리지 않을 만큼 먼 거리는 아니었지만, 둘은 서로가 상대의 울음소리를 못 들은 척해주며 지냈다.")
+            callSentimentAnalysisAPI(etTest.toString())
+        }
     }
 
     // 모드 확인
