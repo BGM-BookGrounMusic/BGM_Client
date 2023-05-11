@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity() {
 
     var player = MediaPlayer()
     //val storage = FirebaseStorage.getInstance()
+    // 음악 플레이리스트 초기화
+    var playlist: ArrayList<Int> = ArrayList()
 
     // 모드 확인용
     var only_bgm = false
@@ -50,6 +52,7 @@ class MainActivity : AppCompatActivity() {
     var jazz = false
     var cl = false
 
+    var sentiment = ""
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -128,8 +131,6 @@ class MainActivity : AppCompatActivity() {
 
     // 음악 재생, 일시 정지
     fun musicControl() {
-        // 음악 플레이리스트 초기화
-        var playlist: ArrayList<Int> = ArrayList()
         playlist.add(R.raw.neutral_lofi1)
 
         //player.setAudioStreamType(AudioManager.STREAM_MUSIC)
@@ -138,19 +139,6 @@ class MainActivity : AppCompatActivity() {
         if (isPaused) {
             player = MediaPlayer.create(this, playlist[0])
             player.start()
-
-
-//            try {
-//                storage.reference.child("감성음악/슬픔/050.mp3").downloadUrl.addOnSuccessListener {
-//                    player.setDataSource(it.toString())
-//                    player.prepare()
-//                    player.start()
-//                }
-//
-//
-//            } catch (e: Exception) {
-//                // TODO: handle exception
-//            }
 
             isPaused = false
             Toast.makeText(this, "재생 시작함", Toast.LENGTH_LONG).show()
@@ -196,19 +184,28 @@ class MainActivity : AppCompatActivity() {
 
                         val image = InputImage.fromBitmap(bitmap, 0)
 
+
                         val result = recognizer.process(image)
                              .addOnSuccessListener { visionText ->
                                  // string to txt file
                                 val fileName = "text.txt"
 
-                        var outputFile: FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
-                        outputFile.write(visionText.text.toByteArray())
-                        outputFile.close()
-                        Log.d("WJ", visionText.text.toString())
-                        Log.d("WJ", callSentimentAnalysisAPI(visionText.text.toString()))
 
-                        //Sentiment 받아오기
-                        //callSentimentAnalysisAPI(visionText.text.toString())
+                                var outputFile: FileOutputStream = openFileOutput(fileName, MODE_PRIVATE)
+                                outputFile.write(visionText.text.toByteArray())
+                                outputFile.close()
+
+                                // 텍스트 결과 & 감성분석 결과
+                                Log.d("WJ", visionText.text.toString())
+                                //Log.d("WJ", callSentimentAnalysisAPI(visionText.text.toString()))
+                                sentiment = callSentimentAnalysisAPI(visionText.text.toString())
+
+                                 if (sentiment == "negative") {
+                                     playlist.add(R.raw.sad1)
+                                 }
+
+                                //Sentiment 받아오기
+                                //callSentimentAnalysisAPI(visionText.text.toString())
                     }
                     .addOnFailureListener { e -> }
                     }
@@ -222,7 +219,6 @@ class MainActivity : AppCompatActivity() {
 
     //감성분석 Clova sentiment
     private fun callSentimentAnalysisAPI(text: String) : String {
-        var sentiment = ""
         val url = "https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze"
         val client = OkHttpClient()
         val jsonBody = JSONObject()
@@ -258,6 +254,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d("MainActivity", "긍정 감정 확률: ${responseObject.document.confidence.positive}")
                     Log.d("MainActivity", "부정 감정 확률: ${responseObject.document.confidence.negative}")
                     sentiment = responseObject.document.sentiment
+
                 }
 
                 /* 나중에 필요하면 쓰깅~~~
@@ -276,7 +273,6 @@ class MainActivity : AppCompatActivity() {
                  */
             }
         })
-
         return sentiment
     }
 
