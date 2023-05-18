@@ -53,10 +53,14 @@ class MainActivity : AppCompatActivity() {
     var highSensitive = false
 
     // 장르 확인용
-    var asmr = false
+    var asmr = true
     var lofi = false
     var jazz = false
     var cl = false
+
+    // noti 설정용
+    var noti_yes = true
+    var noti_no = false
 
     // 텍스트 감성 저장용
     var sentiment = ""
@@ -64,7 +68,6 @@ class MainActivity : AppCompatActivity() {
     var sentimentList: ArrayList<String> = ArrayList()
 
     private val handler = Handler(Looper.getMainLooper())
-    private val handler2 = Handler()
 
     // 곡 남은 시간 확인
     private val checkRemainTimeRunnable = object : Runnable {
@@ -89,8 +92,14 @@ class MainActivity : AppCompatActivity() {
         mBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // 초기화
+        binding.mode1.setTextColor(Color.parseColor("#FF730D"))
+        binding.genre1.setTextColor(Color.parseColor("#FF730D"))
+        binding.notiYes.setTextColor(Color.parseColor("#FF730D"))
+
         modeCheck()
         genreCheck()
+        notiCheck()
 
         // playlist 초기화 (무조건 중립음악으로 시작)
         //
@@ -191,8 +200,7 @@ class MainActivity : AppCompatActivity() {
 
         // 연속 5번 스크린샷
         var i = 1
-        //val handler = Handler()
-        handler2.postDelayed(object : Runnable {
+        handler.postDelayed(object : Runnable {
             override fun run() {
                 if (i in 1..5) {
                     // 백그라운드 캡처
@@ -214,7 +222,7 @@ class MainActivity : AppCompatActivity() {
 
                                  // Check if we have collected five sentiments
                                  if (sentimentList.size >= 5) {
-                                     handler2.removeCallbacksAndMessages(null)
+                                     handler.removeCallbacksAndMessages(null)
                                      // Call the decision function with the sentimentList
                                      sentimentDecision()
                                  }
@@ -224,7 +232,9 @@ class MainActivity : AppCompatActivity() {
                     }
 
                     i++
-                    handler2.postDelayed(this, intervalMillis.toLong())
+                }
+                if (i <= 5) {
+                    handler.postDelayed(this, intervalMillis.toLong())
                 }
             }
         }, intervalMillis.toLong())
@@ -236,63 +246,61 @@ class MainActivity : AppCompatActivity() {
         var sum = 0.0
         Log.d("WJ", sentimentList[0] + ", " + sentimentList[1] + ", " + sentimentList[2] + ", " + sentimentList[3] + ", " + sentimentList[4])
 
-//        if (probabilityOfItem(sentimentList, "positive") > 50) {
-//            Log.d("WJ", probabilityOfItem(sentimentList, "positive").toString())
-//            addPositiveSong()
-//        }
-//        else if (probabilityOfItem(sentimentList, "negative") > 50) {
-//            Log.d("WJ", probabilityOfItem(sentimentList, "negative").toString())
-//            addNegativeSong()
-//        }
-//        else {
-//            Log.d("WJ", probabilityOfItem(sentimentList, "neutral").toString())
-//            addNeutralSong()
-//        }
 
         // 시간에 따라 가중치를 다르게 주는 과정
         when (sentimentList[0]) {
-            "positive" -> sum += 0.1
-            "negative" -> sum -= 0.1
-        }
-
-        when (sentimentList[1]) {
             "positive" -> sum += 0.3
             "negative" -> sum -= 0.3
         }
 
-        when (sentimentList[2]) {
+        when (sentimentList[1]) {
             "positive" -> sum += 0.5
             "negative" -> sum -= 0.5
         }
 
-        when (sentimentList[3]) {
+        when (sentimentList[2]) {
             "positive" -> sum += 0.7
             "negative" -> sum -= 0.7
         }
 
-        when (sentimentList[4]) {
+        when (sentimentList[3]) {
             "positive" -> sum += 0.9
             "negative" -> sum -= 0.9
         }
 
-        Log.d("WJ", "감성 총값 : $sum")
-
-        // 음악 선정 과정
-        if (sum == 0.0) {
-            addNeutralSong()
-        } else if (sum > 0.0) {
-            addPositiveSong()
-        } else {
-            addNegativeSong()
+        when (sentimentList[4]) {
+            "positive" -> sum += 1.0
+            "negative" -> sum -= 1.0
         }
 
-        sentimentList.clear()
-    }
+        sum /= 5
+        Log.d("WJ", "감성 총값 : $sum")
 
-    // 감성확률 구하기 (5개 중에 비율, 연속성 고려 X)
-    private fun probabilityOfItem(arr: ArrayList<String>, target: String): Double {
-        var cnt = arr.count { it == target }
-        return (cnt.toDouble() / arr.size) * 100
+
+        // 음악 선정 과정
+        // 민감도 고려 : 민감도가 높으면 더 세심한 감성분석 (-> 중립의 범위를 더 넓게)
+        if (lowSensitive) {
+            Log.d("WJ", "낮은 민감도 설정")
+            if (sum > -0.1 && sum < 0.1) {
+                addNeutralSong()
+            } else if (sum >= 0.1) {
+                addPositiveSong()
+            } else {
+                addNegativeSong()
+            }
+        } else if (highSensitive) {
+            Log.d("WJ", "높은 민감도 설정")
+            if (sum > -0.3 && sum < 0.3) {
+                addNeutralSong()
+            } else if (sum >= 0.3) {
+                addPositiveSong()
+            } else if (sum <= -0.3) {
+                addNegativeSong()
+            }
+        }
+
+        sum = 0.0
+        sentimentList.clear()
     }
 
     //감성분석 Clova sentiment
@@ -361,8 +369,8 @@ class MainActivity : AppCompatActivity() {
             // 버튼 클릭 시 텍스트 변환
             if (binding.btnOn.text == "시작하기") {
                 // 모드 or 장르 체크 안 했을 경우
-                if ((!lowSensitive && !highSensitive) || (!asmr && !lofi && !jazz && !cl)) {
-                    Toast.makeText(this, "민감도 및 장르 설정을 모두 완료하였는지 다시 한번 확인해주세요.", Toast.LENGTH_LONG).show()
+                if ((!lowSensitive && !highSensitive) || (!asmr && !lofi && !jazz && !cl) || (!noti_yes && !noti_no)) {
+                    Toast.makeText(this, "아래 설정을 모두 완료하였는지 다시 한번 확인해주세요.", Toast.LENGTH_LONG).show()
                }
                 else {
                     binding.btnOn.setText("중 지")
@@ -493,6 +501,36 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // noti 확인
+    private fun notiCheck() {
+        binding.notiYes.setOnClickListener {
+            if (!noti_yes) {
+                if (noti_no) {
+                    noti_no = false
+                    binding.notiNo.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.notiYes.setTextColor(Color.parseColor("#FF730D"))
+                noti_yes = true
+            } else {
+                binding.notiYes.setTextColor(Color.parseColor("#000000"))
+                noti_yes = false
+            }
+        }
+
+        binding.notiNo.setOnClickListener {
+            if (!noti_no) {
+                if (noti_yes) {
+                    noti_yes = false
+                    binding.notiYes.setTextColor(Color.parseColor("#000000"))
+                }
+                binding.notiNo.setTextColor(Color.parseColor("#FF730D"))
+                noti_no = true
+            } else {
+                binding.notiNo.setTextColor(Color.parseColor("#000000"))
+                noti_no = false
+            }
+        }
+    }
 
     // 랜덤하게 음악 추가 = 각각 중립, 긍정, 부정
     private fun addNeutralSong() {
