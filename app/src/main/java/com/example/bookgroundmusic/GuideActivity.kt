@@ -1,5 +1,6 @@
 package com.example.bookgroundmusic
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +18,7 @@ class GuideActivity : AppCompatActivity() {
 
         mBinding = ActivityGuideBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
 
         // 메인 화면으로 이동
         binding.btnBacktomain.setOnClickListener {

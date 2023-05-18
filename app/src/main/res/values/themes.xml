@@ -12,6 +12,7 @@
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/brown_4</item>
         <!-- Customize your theme here. -->
+        <item name="android:colorEdgeEffect">@color/brown_0</item>
     </style>
 
     <style name="Splash" parent="Theme.AppCompat.Light.NoActionBar">
