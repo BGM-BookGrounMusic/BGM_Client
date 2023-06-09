@@ -1,6 +1,8 @@
 # 🎵 Book Ground Music
 전자책 텍스트 분석을 통해 실시간으로 분위기에 맞는 배경음악을 제공해주는 백그라운드 어플리케이션입니다.
 
+![image](https://github.com/BGM-BookGroundMusic/BGM_Client/assets/96529879/8ff22ddc-ff4f-4f4e-8c42-30484c57f75d)
+
 ## Step 1. 전자책 텍스트 데이터 수집
 
 'MediaProjectionAPI'를 사용하여 실시간 스크린샷을 백그라운드로 자동 진행한다. 이후 실시간 스크린샷을 통해 얻은 Bitmap 형태의 전자책 화면을 OCR 처리하여 텍스트 데이터를 수집했다 (Firebase ML Kit에서 제공하는 Text Recognizer를 사용). 연속으로 스크린샷을 찍는 함수 screenshotSeries를 구현하고, 이 함수 내부에서 Text Recognizer 객체를 만들고 불러와 OCR 처리함  Handler를 이용하여 일정 시간 간격으로, 5회 반복하도록 설정했다.
