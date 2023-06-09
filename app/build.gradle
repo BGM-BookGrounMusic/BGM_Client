@@ -71,4 +71,6 @@ dependencies {
     //okhttp3
     implementation "com.squareup.okhttp3:okhttp:4.9.3"
     implementation "com.google.code.gson:gson:2.8.7"
+
+    implementation "com.aallam.similarity:string-similarity-kotlin:0.1.0"
 }

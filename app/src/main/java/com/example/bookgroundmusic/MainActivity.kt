@@ -14,6 +14,7 @@ import android.util.Log
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.aallam.similarity.JaroWinkler
 import com.example.bookgroundmusic.DataClass.SentimentAnalysisResponse
 import com.example.bookgroundmusic.databinding.ActivityMainBinding
 import com.google.firebase.storage.FirebaseStorage
@@ -67,6 +68,15 @@ class MainActivity : AppCompatActivity() {
     // 5번의 연속적인 감성 넣기
     var sentimentList: ArrayList<String> = ArrayList()
 
+    // text 수집용
+    val jaroWinkler = JaroWinkler()
+    var textData = mutableListOf<String>()
+
+    var cnt = 0
+
+    // OCR (ML Kit)
+    val options = KoreanTextRecognizerOptions.Builder().build()
+    val recognizer = TextRecognition.getClient(options)
     private val handler = Handler(Looper.getMainLooper())
 
     // 곡 남은 시간 확인
@@ -101,11 +111,6 @@ class MainActivity : AppCompatActivity() {
         genreCheck()
         notiCheck()
 
-        // playlist 초기화 (무조건 중립음악으로 시작)
-        //
-        // 여기서 에러 수정할 것
-        playlist.add(R.raw.neutral_lofi1)
-        //addNeutralSong()
 
         //permissionCheck()
         startMainService()
@@ -158,6 +163,12 @@ class MainActivity : AppCompatActivity() {
 
     // 음악 재생, 일시 정지
     fun musicControl() {
+        // playlist 초기화 : 맨 처음곡은 중립 음악
+        if (cnt == 0) {
+            addNeutralSong()
+            cnt = 1
+        }
+
         // 재생 안되고 있는 상태 => play 시키기
         if (isPaused) {
             if (isPlayed) {
@@ -176,7 +187,6 @@ class MainActivity : AppCompatActivity() {
 
             isPaused = false
             isPlayed = true
-            Toast.makeText(this, "재생 시작함", Toast.LENGTH_LONG).show()
 
             startCheckingRemainTime()
         }
@@ -186,16 +196,12 @@ class MainActivity : AppCompatActivity() {
             player.pause()
             isPaused = true
 
-            Toast.makeText(this, "일시정지함", Toast.LENGTH_LONG).show()
         }
     }
 
 
     // 일정 시간 간격 연속 스크린샷
     private fun screenshotSeries() {
-        // OCR (ML Kit)
-        val options = KoreanTextRecognizerOptions.Builder().build()
-        val recognizer = TextRecognition.getClient(options)
         val intervalMillis = 15000
 
         // 연속 5번 스크린샷
@@ -210,15 +216,35 @@ class MainActivity : AppCompatActivity() {
 
                         val result = recognizer.process(image)
                              .addOnSuccessListener { visionText ->
-                                // 텍스트 결과 & 감성분석 결과
-                                Log.d("WJ", visionText.text.toString())
+                                 textData.add(visionText.text.toString())
 
-                                sentiment = callSentimentAnalysisAPI(visionText.text.toString())
-                                 Log.d("WJ", sentiment)
+                                 // 중복 텍스트 예외 처리 (일치율 95%로 설정)
+                                 if (textData.size >= 2) {
+                                     Log.d("WJ", "예외 처리 발생")
+                                     if (jaroWinkler.similarity(textData[0], textData[1]) > 0.80) {
+                                         sentiment = callSentimentAnalysisAPI(textData[1])
+                                         if (sentiment != "") {
+                                             sentimentList.add(sentiment)
+                                         }
+                                         Log.d("WJ", textData[1])
+                                         Log.d("WJ", sentiment)
+                                     }
+                                     textData.clear()
+                                 } else {
+                                     Log.d("WJ", "정상 케이스")
+                                     // 중복되는 텍스트 없을 때
+                                     // 텍스트 결과 & 감성분석 결과
+                                     Log.d("WJ", visionText.text.toString())
 
-                                 if (sentiment != "") {
-                                     sentimentList.add(sentiment)
+                                     sentiment = callSentimentAnalysisAPI(visionText.text.toString())
+                                     Log.d("WJ", sentiment)
+
+                                     if (sentiment != "") {
+                                         sentimentList.add(sentiment)
+                                     }
                                  }
+
+
 
                                  // Check if we have collected five sentiments
                                  if (sentimentList.size >= 5) {
@@ -240,6 +266,7 @@ class MainActivity : AppCompatActivity() {
         }, intervalMillis.toLong())
 
     }
+
 
     // 음악 감성 결정 알고리즘 -> 시간 고려한 가중치 (현재 ~ 과거)
     private fun sentimentDecision() {
@@ -273,7 +300,7 @@ class MainActivity : AppCompatActivity() {
             "negative" -> sum -= 1.0
         }
 
-        sum /= 5
+        sum /= 3.4
         Log.d("WJ", "감성 총값 : $sum")
 
 
@@ -342,21 +369,6 @@ class MainActivity : AppCompatActivity() {
                     sentiment = responseObject.document.sentiment
 
                 }
-
-                /* 나중에 필요하면 쓰깅~~~
-                if (responseObject.sentences != null) {
-                    for (sentence in responseObject.sentences) {
-                        if (sentence.sentiment != null) {
-                            // 분류 문장 감정 정보 로그 출력
-                            Log.d("MainActivity", "분류 문장: ${sentence.content}")
-                            Log.d("MainActivity", "문장 감정: ${sentence.sentiment}")
-                            Log.d("MainActivity", "중립 감정 확률: ${sentence.confidence.neutral}")
-                            Log.d("MainActivity", "긍정 감정 확률: ${sentence.confidence.positive}")
-                            Log.d("MainActivity", "부정 감정 확률: ${sentence.confidence.negative}")
-                        }
-                    }
-                }
-                 */
             }
         })
         return sentiment
